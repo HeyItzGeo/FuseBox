@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FuseBox Config Editor (for ExplodeAny) – by HeyItzGeo</title>
+    <link rel="icon" type="image/png" href="css/FavIcon.png">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        /* Initial styles to prevent flash of white */
+        html, body {
+            background-color: #000000;
+            transition: background-color 0.3s ease-in-out;
+        }
+        /* Content fade in */
+        body {
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        body.loaded {
+            opacity: 1;
+        }
+        body.theme-changing {
+            opacity: 0;
+        }
+        /* Override for the reload overlay */
+        #reload-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000000;
+            z-index: 9999;
+            pointer-events: none;
+        }
+    </style>
+    <script>
+        document.documentElement.style.backgroundColor = '#000000';
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(() => {
+                document.documentElement.style.backgroundColor = '';
+                const overlay = document.getElementById('reload-overlay');
+                if (overlay) {
+                    overlay.remove();
+                }
+                const successMessage = sessionStorage.getItem('showSuccessMessage');
+                if (successMessage) {
+                    sessionStorage.removeItem('showSuccessMessage');
+                    if (window.EntityMaterialUI && typeof window.EntityMaterialUI.showNotification === 'function') {
+                        window.EntityMaterialUI.showNotification(successMessage, 'success');
+                    } else {
+                        console.log('Success:', successMessage);
+                    }
+                }
+            }, 50);
+        });
+</script>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-3 col-lg-2 px-0">
+                <div class="bg-dark vh-100 sticky-top d-flex flex-column">
+                    <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+                        <a href="/" class="d-flex flex-column align-items-center text-decoration-none w-100">
+                            <img src="css/FavIcon.png" alt="Logo" class="mb-2" style="height: 100px; width: 100px; object-fit: contain;">
+                            <div class="text-center w-100">
+                                <div class="fs-5 fw-bold text-gray-800">FuseBox Config Editor</div>
+                                <div class="text-muted small">for ExplodeAny</div>
+                            </div>
+                        </a>
+                        <button id="themeToggle" class="btn p-2" title="Toggle Dyslexia-Friendly Mode" style="background-color: #ffb700; border-radius: 0.5rem; transition: all 0.2s ease-in-out;">
+                            <img src="https://cdn-icons-png.flaticon.com/512/8086/8086339.png" alt="Dyslexia Mode Off" class="dyslexia-icon" style="width: 2.25rem; height: 2.25rem; transition: all 0.3s ease; display: none;">
+                            <img src="https://cdn-icons-png.flaticon.com/512/8086/8086326.png" alt="Dyslexia Mode On" class="dyslexia-icon" style="width: 2.25rem; height: 2.25rem; transition: all 0.3s ease; display: none;">
+                        </button>
+                    </div>
+                    <div class="flex-grow-1 overflow-auto">
+                        <ul class="nav nav-pills flex-column" id="config-nav">
+                            <li class="nav-item">
+                                <a href="#general" class="nav-link" data-bs-toggle="tab" data-section="general">
+                                    <i class="bi bi-gear"></i> General
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#checktool" class="nav-link" data-bs-toggle="tab" data-section="checktool">
+                                    <i class="bi bi-tools"></i> Checktool
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#localization" class="nav-link" data-bs-toggle="tab" data-section="localization">
+                                    <i class="bi bi-translate"></i> Localization
+                                </a>
+                            </li>
+                            <li class="nav-item my-2">
+                                <div class="border-top border-2 border-light opacity-25 mx-2"></div>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#vanilla-entity" class="nav-link active ps-3 py-2" data-bs-toggle="tab" data-section="vanilla-entity" style="border-left: 3px solid var(--bs-primary);">
+                                    <i class="bi bi-boxes me-2"></i> Vanilla Entities
+                                </a>
+                                <div class="ms-4 ps-3">
+                                    <a href="#entities" class="nav-link py-2 ps-2" data-bs-toggle="tab" data-section="entities">
+                                        <i class="bi bi-person me-2"></i>Entities
+                                    </a>
+                                    <a href="#materials" class="nav-link py-2 ps-2" data-bs-toggle="tab" data-section="materials">
+                                        <i class="bi bi-box me-2"></i>Materials
+                                    </a>
+                                </div>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#groups" class="nav-link" data-bs-toggle="tab" data-section="groups">
+                                    <i class="bi bi-collection"></i> Groups
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="mt-auto p-3 border-top bg-dark" style="flex-shrink: 0;">
+                        <div class="d-grid gap-2">
+                            <div class="btn-group dropup w-100">
+                                <button id="export-btn" class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+                                    <i class="bi bi-download me-1"></i> Export Config
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" href="#" id="export-download"><i class="bi bi-file-earmark-arrow-down me-2"></i>Download YAML</a></li>
+                                    <li><a class="dropdown-item" href="#" id="export-view"><i class="bi bi-file-text me-2"></i>View YAML</a></li>
+                                </ul>
+                            </div>
+                            <button id="import-btn" class="btn btn-sm text-white" style="background-color: #0d6efd;">
+                                <i class="bi bi-upload me-1"></i> Import Config
+                            </button>
+                            <input type="file" id="import-file" accept=".yml,.yaml" hidden>
+                            <div class="mt-3 pt-3 border-top">
+                                <button id="clear-config-btn" class="btn btn-outline-danger btn-sm w-100"
+                                        data-bs-toggle="tooltip"
+                                        data-bs-placement="top"
+                                        title="Warning: This will clear all saved configurations">
+                                    <i class="bi bi-exclamation-triangle me-1"></i> Clear Saved Config
+                                </button>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+            <div class="col-md-9 col-lg-10 px-4" id="main-content">
+                <div class="tab-content" id="config-content">
+                    <div class="tab-pane fade" id="general">
+                        <div id="general-settings-container">
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="checktool">
+                        <div id="checktool-settings-container">
+                        </div>
+                    </div>
+                    <div class="tab-pane fade show active" id="vanilla-entity">
+                        <div id="entity-form-container" class="mb-4"></div>
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>Vanilla Entities</span>
+                                <button class="btn btn-sm btn-primary" id="add-vanilla-entity">
+                                    <i class="bi bi-plus-circle"></i> Add Entity
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="alert alert-info mb-4 p-4" style="background-color: #2a2a2a; border: 1px solid #ff6b00;">
+                                    <h5 class="alert-heading mb-3" style="color: #ffae4b;">🎉 Welcome to <strong>Vanilla Entities</strong>!</h5>
+                                    <p class="mb-2 fw-bold" style="color: #ffae4b;">Getting Started:</p>
+                                    <ol class="mb-3 ps-3" style="color: #f0f0f0;">
+                                        <li>Click the <strong>Add Entity</strong> button above.</li>
+                                        <li>Fill in both <strong>Entity</strong> and <strong>Material</strong> details.</li>
+                                        <li>Click <strong>Save Material</strong> to create your new pair.</li>
+                                    </ol>
+                                    <p class="mb-2 fw-bold" style="color: #ffae4b;">Quick Tips:</p>
+                                    <ul class="mb-3 ps-3" style="color: #f0f0f0;">
+                                        <li>Particles and sounds are off by default – toggle them as needed.</li>
+                                        <li>Edit existing pairs in the <strong>Entities</strong> or <strong>Materials</strong> tabs.</li>
+                                        <li>Use <strong>Convert to Group</strong> to add multiple items to a group.</li>
+                                        <li>Create empty group pairs in the <strong>Groups</strong> tab.</li>
+                                        <li>Adjust settings in the <strong>General</strong> or <strong>Checktool</strong> tabs.</li>
+                                    </ul>
+                                    <p class="mt-3 mb-0 fw-bold" style="color: #ffae4b;">
+                                        ✅ When you're ready, click <strong>Export Config</strong> in the sidebar!
+                                    </p>
+                                    </p>
+                                </div>
+                                <div id="vanilla-entities-container">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="entities">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <span>Entities</span>
+                            </div>
+                            <div class="card-body">
+                                <div id="entity-container">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="localization">
+                        <div class="card mb-4">
+                            <div class="card-body" id="localization-settings-container">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="materials">
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <span>Materials</span>
+                            </div>
+                            <div class="card-body">
+                                <div id="materials-container">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="groups">
+                        <div class="card mb-4">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <span>Groups</span>
+                                <button class="btn btn-sm btn-primary" id="add-group-pair">
+                                    <i class="bi bi-collection"></i> Add Group Pair
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div id="groups-container">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade" id="entityModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit <span id="entityModalType">Entity</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="entity-form">
+                        <div class="mb-4">
+                            <label for="entityType" class="form-label">
+                                <span id="entityTypeLabel">Entity Type</span>
+                                <small class="text-muted d-block" id="entityTypeHelp">
+                                    Enter the name of the entity
+                                </small>
+                            </label>
+                            <input type="text" class="form-control" id="entityType" required>
+                        </div>
+                        <ul class="nav nav-tabs mb-3" id="propertyTabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" id="basic-tab" data-bs-toggle="tab"
+                                        data-bs-target="#basic-properties" type="button" role="tab">
+                                    <i class="bi bi-gear"></i> Basic
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="explosion-tab" data-bs-toggle="tab"
+                                        data-bs-target="#explosion-properties" type="button" role="tab">
+                                    <i class="bi bi-boom"></i> Explosion
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="effects-tab" data-bs-toggle="tab"
+                                        data-bs-target="#effect-properties" type="button" role="tab">
+                                    <i class="bi bi-magic"></i> Effects
+                                </button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" id="advanced-tab" data-bs-toggle="tab"
+                                        data-bs-target="#advanced-properties" type="button" role="tab">
+                                    <i class="bi bi-sliders"></i> Advanced
+                                </button>
+                            </li>
+                        </ul>
+                        <div class="tab-content p-3 border border-top-0 rounded-bottom" id="propertyTabsContent">
+                            <div class="tab-pane fade show active" id="basic-properties" role="tabpanel">
+                                <div class="row g-3" id="basic-properties-container">
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="explosion-properties" role="tabpanel">
+                                <div class="row g-3" id="explosion-properties-container">
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="effect-properties" role="tabpanel">
+                                <div class="row g-3" id="effect-properties-container">
+                                </div>
+                            </div>
+                            <div class="tab-pane fade" id="advanced-properties" role="tabpanel">
+                                <div class="row g-3" id="advanced-properties-container">
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="add-custom-property">
+                                        <i class="bi bi-plus"></i> Add Custom Property
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="save-entity">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+</script>
+    <script>
+</script>
+    <script>
+</script>
+    <script>
+</script>
+    <script>
+</script>
+    <script>
+</script>
+    <script>
+</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const themeToggle = document.getElementById('themeToggle');
+            const themeLink = document.createElement('link');
+            themeLink.rel = 'stylesheet';
+            themeLink.id = 'theme-stylesheet';
+            const savedTheme = localStorage.getItem('theme') || 'standard';
+            const [offIcon, onIcon] = themeToggle.querySelectorAll('.dyslexia-icon');
+            if (savedTheme === 'dyslexia') {
+                themeLink.href = 'css/Blackstyle.css';
+                themeToggle.classList.add('active');
+                document.body.classList.add('dyslexia-theme');
+                onIcon.style.display = 'block';
+                offIcon.style.display = 'none';
+            } else {
+                themeLink.href = 'css/styles.css';
+                document.body.classList.remove('dyslexia-theme');
+                onIcon.style.display = 'none';
+                offIcon.style.display = 'block';
+            }
+            themeLink.onload = function() {
+                document.body.classList.add('loaded');
+            };
+            document.head.appendChild(themeLink);
+            themeToggle.addEventListener('click', function() {
+                const isNowDarkMode = themeLink.href.includes('Blackstyle.css');
+                document.body.classList.add('theme-changing');
+                setTimeout(() => {
+                    if (isNowDarkMode) {
+                        themeLink.href = 'css/styles.css';
+                        localStorage.setItem('theme', 'standard');
+                        document.body.classList.remove('dyslexia-theme');
+                        offIcon.style.display = 'block';
+                        onIcon.style.display = 'none';
+                    } else {
+                        themeLink.href = 'css/Blackstyle.css';
+                        localStorage.setItem('theme', 'dyslexia');
+                        document.body.classList.add('dyslexia-theme');
+                        offIcon.style.display = 'none';
+                        onIcon.style.display = 'block';
+                    }
+                    themeLink.onload = function() {
+                        document.body.classList.remove('theme-changing');
+                    };
+                    themeToggle.classList.toggle('active');
+                }, 150);
+            });
+        });
+</script>
+    <script>
+</script>
+    <script>
+</script>
+    <script>
+</script>
+    <script>
+</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const generalSettingsContainer = document.getElementById('general-settings-container');
+            if (generalSettingsContainer) {
+                const generalSettings = new window.GeneralSettings(window.globalProperties);
+                generalSettings.init(generalSettingsContainer);
+            }
+            const checktoolSettingsContainer = document.getElementById('checktool-settings-container');
+            if (checktoolSettingsContainer) {
+                const checktoolSettings = new window.ChecktoolSettings(window.globalProperties);
+                checktoolSettings.init(checktoolSettingsContainer);
+            }
+            const localizationContainer = document.getElementById('localization-settings-container');
+            if (localizationContainer) {
+                const localizationSettings = new window.LocalizationSettings(window.globalProperties?.Locale || {});
+                localizationSettings.init(localizationContainer);
+            }
+            window.vanillaEntityManager = new VanillaEntityManager();
+            window.exportManager = new ExportManager(window.vanillaEntityManager);
+            window.groupsManager = new GroupsManager();
+            document.getElementById('export-download').addEventListener('click', (e) => {
+                e.preventDefault();
+                exportManager.exportConfig();
+            });
+            document.getElementById('export-view').addEventListener('click', async (e) => {
+                e.preventDefault();
+                const yamlContent = await exportManager.getYamlContent();
+                document.getElementById('yaml-content').textContent = yamlContent;
+                const yamlModal = new bootstrap.Modal(document.getElementById('yamlModal'));
+                yamlModal.show();
+            });
+        });
+</script>
+    <div class="modal fade" id="yamlModal" tabindex="-1" aria-labelledby="yamlModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content bg-dark text-light">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title" id="yamlModalLabel">YAML Configuration</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <pre id="yaml-content" class="p-3 mb-0" style="max-height: 70vh; overflow: auto; background-color: #1a1a1a; color: #f8f9fa;"></pre>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="copy-yaml">
+                        <i class="bi bi-clipboard me-1"></i> Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
