@@ -38,6 +38,7 @@
         }
     </style>
     <script>
+        
         document.documentElement.style.backgroundColor = '#000000';
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
@@ -57,7 +58,7 @@
                 }
             }, 50);
         });
-</script>
+    </script>
 </head>
 <body>
     <div class="container-fluid">
@@ -249,7 +250,6 @@
                             <label for="entityType" class="form-label">
                                 <span id="entityTypeLabel">Entity Type</span>
                                 <small class="text-muted d-block" id="entityTypeHelp">
-                                    Enter the name of the entity
                                 </small>
                             </label>
                             <input type="text" class="form-control" id="entityType" required>
@@ -312,21 +312,15 @@
             </div>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="js/ConfigProperties.js"></script>
+    <script src="js/utils/autocompleteUtils.js"></script>
+    <script src="js/ui/EntityMaterialUI.js"></script>
+    <script src="js/vanilla-entities.js"></script>
     <script>
-</script>
-    <script>
-</script>
-    <script>
-</script>
-    <script>
-</script>
-    <script>
-</script>
-    <script>
-</script>
-    <script>
-</script>
-    <script>
+        // Theme Toggle Functionality
         document.addEventListener('DOMContentLoaded', function() {
             const themeToggle = document.getElementById('themeToggle');
             const themeLink = document.createElement('link');
@@ -374,15 +368,11 @@
                 }, 150);
             });
         });
-</script>
-    <script>
-</script>
-    <script>
-</script>
-    <script>
-</script>
-    <script>
-</script>
+    </script>
+    <script src="js/groups-manager.js"></script>
+    <script src="js/ui/GeneralSettings.js"></script>
+    <script src="js/utils/export-manager.js"></script>
+    <script src="js/utils/inport-manager.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const generalSettingsContainer = document.getElementById('general-settings-container');
@@ -415,7 +405,7 @@
                 yamlModal.show();
             });
         });
-</script>
+    </script>
     <div class="modal fade" id="yamlModal" tabindex="-1" aria-labelledby="yamlModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl">
             <div class="modal-content bg-dark text-light">
